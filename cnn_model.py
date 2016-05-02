@@ -19,31 +19,36 @@ class cnn_model():
     model = None
     numEpoch = None
     numBatch = None
+
+    def kerasModel(self):   
+        model = Sequential()
+        model.add(Convolution2D(32, 3, 3, border_mode='valid', input_shape=(1, 96,96), init = 'glorot_uniform'))
+        model.add(Activation("relu"))
+        model.add(MaxPooling2D(pool_size=(2,2)))
+        model.add(Convolution2D(64,3,3, init = 'glorot_uniform'))
+        model.add(Activation('relu'))
+        model.add(MaxPooling2D(pool_size=(2,2)))
+        model.add(Convolution2D(128,3,3, init = 'glorot_uniform'))
+        model.add(Activation('relu'))
+        model.add(MaxPooling2D(pool_size=(2,2)))
+        model.add(Flatten())
+        model.add(Dense(500, init = 'glorot_uniform'))
+        model.add(Activation("relu"))
+        model.add(Dense(500, init = 'glorot_uniform'))
+        model.add(Activation("relu"))
+        model.add(Dense(30, init = 'glorot_uniform'))
+        model.add(Activation("relu"))
+        
+        model.compile(loss="mean_absolute_error", optimizer="sgd")
+        
+        return model
     
     def __init__(self, numEpoch = 20, numBatch = 200):
         self.numEpoch = numEpoch
         self.numBatch = numBatch
         
         print 'Initializing model...'
-        self.model = Sequential()
-        self.model.add(Convolution2D(32, 3, 3, border_mode='valid', input_shape=(1, 96,96), init = 'glorot_uniform'))
-        self.model.add(Activation("relu"))
-        self.model.add(MaxPooling2D(pool_size=(2,2)))
-        self.model.add(Convolution2D(32,3,3, init = 'glorot_uniform'))
-        self.model.add(Activation('relu'))
-        self.model.add(MaxPooling2D(pool_size=(2,2)))
-        self.model.add(Convolution2D(32,3,3, init = 'glorot_uniform'))
-        self.model.add(Activation('relu'))
-        self.model.add(MaxPooling2D(pool_size=(2,2)))
-        self.model.add(Flatten())
-        self.model.add(Dense(500, init = 'glorot_uniform'))
-        self.model.add(Activation("relu"))
-        self.model.add(Dense(200, init = 'glorot_uniform'))
-        self.model.add(Activation("relu"))
-        self.model.add(Dense(30, init = 'glorot_uniform'))
-        self.model.add(Activation("relu"))
-        
-        self.model.compile(loss="mean_absolute_error", optimizer="sgd")
+        self.model = self.kerasModel()
         
     def fit(self, tr_df):
         print 'Fitting the model...'
@@ -66,7 +71,28 @@ class cnn_model():
             y['ImageId'] = te_df['ImageId']
         
         return y
+
+class cnn_model_simple(cnn_model):
+    
+    def kerasModel(self):
+        model = Sequential()
+        model.add(Convolution2D(32, 11, 11, border_mode='valid', input_shape=(1, 96,96), init = 'glorot_uniform'))
+        model.add(Activation("relu"))
+        model.add(Flatten())
+        model.add(Dense(500, init = 'glorot_uniform'))
+        model.add(Activation("relu"))
+        model.add(Dense(30, init = 'glorot_uniform'))
+        model.add(Activation("relu"))
         
+        model.compile(loss="mean_absolute_error", optimizer="sgd")
+        return model
+        
+    def __init__(self, numEpoch = 20, numBatch = 200):
+        self.numEpoch = numEpoch
+        self.numBatch = numBatch
+        
+        print 'Initializing model...'
+        self.model = self.kerasModel()
     
 if __name__ == '__main__':
     train_df, test_df = load_data.load_fkdata()
