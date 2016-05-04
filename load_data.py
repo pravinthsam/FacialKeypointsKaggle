@@ -55,6 +55,11 @@ def markPointsOnImage(image, points):
 
 def pointsFromLabel(row, labels):
     points = []
+    if 'all' in labels:
+        labels.append('eyes')
+        labels.append('eyebrows')
+        labels.append('mouth')
+        labels.append('nose')
     if 'eyes' in labels:
         labels.append('left_eye')
         labels.append('right_eye')
@@ -111,5 +116,3 @@ if __name__ == '__main__':
     train_df, test_df = load_fkdata()
     markLabelsOnRow(train_df[6:7], ['eyes', 'mouth', 'eyebrows'])
     plotGridOfFaces(3, 4, train_df.Image, 10)
-    
-

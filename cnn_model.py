@@ -13,12 +13,15 @@ from keras.models import Sequential
 from keras.layers.core import Dense, Activation
 from keras.layers import Convolution2D, MaxPooling2D, Flatten
 
+from keras.models import model_from_json
+
 class cnn_model():
     
     cols = None
     model = None
     numEpoch = None
     numBatch = None
+    name = None
 
     def kerasModel(self):   
         model = Sequential()
@@ -37,15 +40,16 @@ class cnn_model():
         model.add(Dense(500, init = 'glorot_uniform'))
         model.add(Activation("relu"))
         model.add(Dense(30, init = 'glorot_uniform'))
-        model.add(Activation("relu"))
+        model.add(Activation("linear"))
         
         model.compile(loss="mean_absolute_error", optimizer="sgd")
         
         return model
     
-    def __init__(self, numEpoch = 20, numBatch = 200):
+    def __init__(self, name, numEpoch = 20, numBatch = 200):
         self.numEpoch = numEpoch
         self.numBatch = numBatch
+        self.name = name
         
         print 'Initializing model...'
         self.model = self.kerasModel()
@@ -57,6 +61,7 @@ class cnn_model():
         y = tr_df.drop('Image', 1).as_matrix() / 255.0
         self.cols = tr_df.columns
         self.model.fit(X, y, nb_epoch=self.numEpoch, batch_size=self.numBatch)
+        self.save()
         
     def predict(self, te_df):
         print 'Predicting values...'
@@ -71,6 +76,16 @@ class cnn_model():
             y['ImageId'] = te_df['ImageId']
         
         return y
+        
+    def save(self, name=None):
+        if name is None:
+            name = self.name
+        open('./models/' + name + '.json', 'w').write(self.model.to_json())
+        self.model.save_weights('./models/' + name + '_weights.h5', overwrite=True)
+    
+    def load(self, name):
+        self.model = model_from_json(open('./models/' + name + '.json').read())
+        self.model.load_weights('./models/' + name + '_weights.h5')
 
 class cnn_model_simple(cnn_model):
     
@@ -82,7 +97,7 @@ class cnn_model_simple(cnn_model):
         model.add(Dense(500, init = 'glorot_uniform'))
         model.add(Activation("relu"))
         model.add(Dense(30, init = 'glorot_uniform'))
-        model.add(Activation("relu"))
+        model.add(Activation("linear"))
         
         model.compile(loss="mean_absolute_error", optimizer="sgd")
         return model
@@ -99,13 +114,13 @@ if __name__ == '__main__':
     train_df = train_df.dropna()
     idLookup = load_data.loadIdLookup()
     
-    c_model1 = cnn_model(1, 1000)
+    c_model1 = cnn_model('dnouri_model', 50, 100)
     c_model1.fit(train_df)
     
     train_df_y = c_model1.predict(train_df)
     test_df_y = c_model1.predict(test_df)
     
-    load_data.createSubmissionFile(test_df_y, idLookup, 'results/cnn_model_1_results.csv')
+    load_data.createSubmissionFile(test_df_y, idLookup, 'results/cnn_dnouri_model_150epochs_results.csv')
     
     
     
